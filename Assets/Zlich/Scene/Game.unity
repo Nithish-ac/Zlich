@@ -288,6 +288,19 @@ MonoBehaviour:
   - {fileID: 1410098344}
   - {fileID: 58544486}
   - {fileID: 702766051}
+  _diceSprites:
+  - intValue: 1
+    spriteValue: {fileID: 21300000, guid: b2b5de90644b6b14a80a7a8f1545126f, type: 3}
+  - intValue: 2
+    spriteValue: {fileID: 21300000, guid: f2e5c49689b8e9344bcd27bcba47debd, type: 3}
+  - intValue: 3
+    spriteValue: {fileID: 21300000, guid: 412af7522c278bb49855585e662a7bb8, type: 3}
+  - intValue: 4
+    spriteValue: {fileID: 21300000, guid: 19fc73f2cda51474b96bc359ae8607a6, type: 3}
+  - intValue: 5
+    spriteValue: {fileID: 21300000, guid: 9c3eb88ed390d134e9b00b492f9d3dd4, type: 3}
+  - intValue: 6
+    spriteValue: {fileID: 21300000, guid: 856839f9c5974e94083241c6761c2ebd, type: 3}
 --- !u!4 &75404564
 Transform:
   m_ObjectHideFlags: 0
@@ -589,7 +602,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 039e1385d23761e4aad70ff92845b189, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dice: []
 --- !u!1 &182560729
 GameObject:
   m_ObjectHideFlags: 0
@@ -1273,7 +1285,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 19fc73f2cda51474b96bc359ae8607a6, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3392,6 +3404,13 @@ MonoBehaviour:
   - {fileID: 1084440700}
   - {fileID: 1474577501}
   - {fileID: 818550630}
+  _selectedDieSprites:
+  - {fileID: 945350226}
+  - {fileID: 182560731}
+  - {fileID: 1279032430}
+  - {fileID: 1232967767}
+  - {fileID: 2075768565}
+  - {fileID: 1183842669}
 --- !u!1 &2075768563
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,9 +12,16 @@ namespace Zilch
         private float _forceX, _forceY, _forceZ;
         internal int _diceFaceNow;
         private bool _isRolling;
+
+        //class
+        private GameManager _gameManager;
         private void Awake()
         {
             Initialize();
+        }
+        private void Start()
+        {
+            _gameManager = GameManager.Instance;
         }
         private void Initialize()
         {
@@ -34,9 +41,9 @@ namespace Zilch
         }
         private void OnMouseDown()
         {
-            if (!_isRolling)
+            if (!_isRolling && _diceFaceNow>0)
             {
-
+                _gameManager.ClickOnDie(gameObject, _diceFaceNow);
             }
         }
         public int GetDiceFaceScore(string tag)

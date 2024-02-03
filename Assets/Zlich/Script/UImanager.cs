@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Zilch
 {
@@ -9,6 +10,8 @@ namespace Zilch
         public static UImanager Instance;
         [SerializeField]
         internal TMPro.TMP_Text[] _score;
+        [SerializeField]
+        internal List<Image> _selectedDieSprites;
         private GameManager _gameManager;
         private void Awake()
         {
