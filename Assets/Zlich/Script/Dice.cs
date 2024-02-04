@@ -43,7 +43,7 @@ namespace Zilch
         {
             if (!_isRolling && _diceFaceNow>0)
             {
-                _gameManager.ClickOnDie(gameObject, _diceFaceNow);
+                _gameManager.ClickOnDie(gameObject);
             }
         }
         public int GetDiceFaceScore(string tag)
@@ -69,6 +69,11 @@ namespace Zilch
         }
         public void CheckRoll()
         {
+            //Actual Logic is
+            //y 1 == 2; y -1 == 5
+            //x 1 == 4; x -1 == 3
+            //z 1 == 1; z -1 == 6
+
             float yDot, xDot, zDot;
             int rollvalue = -1;
             yDot = Mathf.Round(Vector3.Dot(transform.up.normalized, Vector3.up));
@@ -103,7 +108,7 @@ namespace Zilch
                     break;
             }
             _diceFaceNow = rollvalue;
-            UImanager.Instance.UpdateScoreText(gameObject.tag);
+            //UImanager.Instance.UpdateScoreText(gameObject.tag);
             Debug.Log("Score Updated = " + gameObject.tag + " = " + _diceFaceNow);
         }
     }

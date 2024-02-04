@@ -5,12 +5,6 @@ using UnityEngine.UI;
 
 namespace Zilch
 {
-    [System.Serializable]
-    public class DiceSprite
-    {
-        public int intValue;
-        public Sprite spriteValue;
-    }
     public class GameManager : MonoBehaviour
     {
         //classes
@@ -19,8 +13,8 @@ namespace Zilch
         [SerializeField]
         internal Dice[] _dice;
         [SerializeField]
-        private List<DiceSprite> _diceSprites;
-        private List<(GameObject, int)> _disabledDice;
+        internal List<GameObject> _placeHolder;
+        private Dictionary<GameObject, Vector3> _previousPositions = new();
         private void Awake()
         {
             if (Instance == null)
@@ -39,37 +33,62 @@ namespace Zilch
                 dice.RotateDice();
             }
         }
-        public void ClickOnDie(GameObject obj, int number)
+        public void ClickOnDie(GameObject die)
         {
-            obj.SetActive(false);
-            Sprite dieImage = null;
-
-            foreach (DiceSprite diceSprite in _diceSprites)
+            if (!_previousPositions.ContainsKey(die))
             {
-                if (diceSprite.intValue == number)
+                // If die is not in the dictionary, store its previous position
+                _previousPositions[die] = die.transform.position;
+                MoveDieToPlaceholder(die);
+            }
+            else
+            {
+                // If die is in the dictionary, move it back to the previous position
+                MoveDieToPreviousPosition(die);
+                _previousPositions.Remove(die); // Remove from dictionary after moving back
+            }
+        }
+
+        private bool IsPlaceholderOccupied(GameObject placeholder)
+        {
+            return placeholder.transform.childCount > 0;
+        }
+
+        private void MoveDieToPlaceholder(GameObject die)
+        {
+            foreach (GameObject placeholder in _placeHolder)
+            {
+                if (!IsPlaceholderOccupied(placeholder))
                 {
-                    dieImage = diceSprite.spriteValue;
+                    die.transform.SetParent(placeholder.transform);
+                    die.transform.localPosition = Vector3.zero;
                     break;
                 }
             }
-            int index = _uiManager._selectedDieSprites.FindIndex(image => image.sprite == null);
+        }
 
-            if (index != -1)
+        private void MoveDieToPreviousPosition(GameObject die)
+        {
+            die.transform.SetParent(null); // Unparent the die
+            die.transform.position = _previousPositions[die]; // Move back to the previous position
+        }
+        private void CalculateScore()
+        {
+            int totalScore = 0;
+
+            foreach (GameObject placeholder in _placeHolder)
             {
-                _uiManager._selectedDieSprites[index].sprite = dieImage;
-                _disabledDice.Add((obj, number));
+                if (placeholder.transform.childCount > 0)
+                {
+                    GameObject die = placeholder.transform.GetChild(0).gameObject;
+                    int faceValue = GetDiceFaceValue(die);
+                    totalScore += CalculateIndividualScore(faceValue);
+                }
             }
         }
-        public void ClickOnDiceSprite(int dieNumber)
+        private int GetDiceFaceValue(GameObject die)
         {
-            var disabledDie = _disabledDice.Find(die => die.Item2 == dieNumber);
-
-            if (disabledDie.Item1 != null)
-            {
-                disabledDie.Item1.SetActive(true);
-
-                _disabledDice.Remove(disabledDie);
-            }
+            return die.GetComponent<Dice>()._diceFaceNow;
         }
     }
 }
