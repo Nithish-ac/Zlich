@@ -12,6 +12,7 @@ namespace Zilch
         private float _forceX, _forceY, _forceZ;
         internal int _diceFaceNow;
         private bool _isRolling;
+        internal bool _isSelected;
 
         //class
         private GameManager _gameManager;
@@ -64,7 +65,7 @@ namespace Zilch
             _forceY = Random.Range(0f, _maxRandomForceValue);
             _forceZ = Random.Range(0f, _maxRandomForceValue);
 
-            body.AddForce(Vector3.back * _startRollingForce);
+            body.AddForce(Vector3.up * _startRollingForce);
             body.AddTorque(new Vector3(_forceX, _forceY, _forceZ));
         }
         public void CheckRoll()

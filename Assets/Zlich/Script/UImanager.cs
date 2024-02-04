@@ -10,6 +10,8 @@ namespace Zilch
         public static UImanager Instance;
         [SerializeField]
         internal TMPro.TMP_Text[] _score;
+        [SerializeField]
+        internal TMPro.TMP_Text PlayerScore;
         private GameManager _gameManager;
         private void Awake()
         {
@@ -34,5 +36,9 @@ namespace Zilch
         //        }
         //    }
         //}
+        public void UpdateScore(int score)
+        {
+            PlayerScore.text = "Player Score :"+ score.ToString();
+        }
     }
 }
