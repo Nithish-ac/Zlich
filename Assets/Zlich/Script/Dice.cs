@@ -13,6 +13,7 @@ namespace Zilch
         internal int _diceFaceNow;
         private bool _isRolling;
         internal bool _isSelected;
+        private Vector3 _spawnPosition;
 
         //class
         private GameManager _gameManager;
@@ -23,6 +24,7 @@ namespace Zilch
         private void Start()
         {
             _gameManager = GameManager.Instance;
+            _spawnPosition = transform.position;
         }
         private void Initialize()
         {
@@ -39,6 +41,10 @@ namespace Zilch
                     CheckRoll();
                 }
             }
+        }
+        public void ResetDice()
+        {
+            transform.position = _spawnPosition;
         }
         private void OnMouseDown()
         {
@@ -57,6 +63,7 @@ namespace Zilch
         }
         public void RotateDice()
         {
+            transform.position = _spawnPosition;
             transform.rotation = Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
             _isRolling = true;
             body.isKinematic = false;

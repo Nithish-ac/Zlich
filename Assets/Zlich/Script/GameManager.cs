@@ -15,6 +15,9 @@ namespace Zilch
         [SerializeField]
         internal List<GameObject> _placeHolder;
         private Dictionary<GameObject, Vector3> _previousPositions = new();
+        private int _currentPlaceholderIndex = -1;
+        private int Score;
+        private int _totalScore;
         private void Awake()
         {
             if (Instance == null)
@@ -28,11 +31,34 @@ namespace Zilch
         }
         public void RollDice()
         {
+            _currentPlaceholderIndex++;
             foreach (Dice dice in _dice)
             {
                 if(!dice._isSelected)
                     dice.RotateDice();
             }
+        }
+        public void CollectScore()
+        {
+            _totalScore += Score;
+            Score = 0;
+            _uiManager.UpdateTotalScore(_totalScore);
+            ResetDice();
+            _currentPlaceholderIndex = -1;
+        }
+        public void ResetDice()
+        {
+            foreach (Dice dice in _dice)
+            {
+                dice.ResetDice();
+                dice._isSelected = false;
+                dice._diceFaceNow = 0;
+            }
+            foreach (var key in _previousPositions.Keys)
+            {
+                MoveDieToPreviousPosition(key);
+            }
+            _previousPositions.Clear();
         }
         #region ClickOnDie
         public void ClickOnDie(GameObject die)
@@ -42,30 +68,32 @@ namespace Zilch
                 _previousPositions[die] = die.transform.position;
                 MoveDieToPlaceholder(die);
                 die.GetComponent<Dice>()._isSelected = true;
+                CalculateScore(die,true);
             }
             else
             {
                 MoveDieToPreviousPosition(die);
                 _previousPositions.Remove(die);
                 die.GetComponent<Dice>()._isSelected = false;
+                CalculateScore(die, false);
             }
-            CalculateScore();
-        }
-
-        private bool IsPlaceholderOccupied(GameObject placeholder)
-        {
-            return placeholder.transform.childCount > 0;
+            
         }
 
         private void MoveDieToPlaceholder(GameObject die)
         {
-            foreach (GameObject placeholder in _placeHolder)
+            GameObject placeholder = _placeHolder[_currentPlaceholderIndex];
+            Transform placeholderTransform = placeholder.transform;
+
+            for (int i = 0; i < placeholderTransform.childCount; i++)
             {
-                if (!IsPlaceholderOccupied(placeholder))
+                Transform child = placeholderTransform.GetChild(i);
+                if (child.childCount == 0) // Check if the child has no children (i.e., empty)
                 {
-                    die.transform.SetParent(placeholder.transform);
-                    die.transform.localPosition = Vector3.zero;
-                    break;
+                    // Place the die as a child of the empty placeholder
+                    die.transform.SetParent(child);
+                    die.transform.localPosition = Vector3.zero;// Cycle through placeholders
+                    return; // Exit the method once the die is placed
                 }
             }
         }
@@ -76,20 +104,16 @@ namespace Zilch
             die.transform.position = _previousPositions[die]; // Move back to the previous position
         }
         #endregion
-        private void CalculateScore()
+        #region Calculate Score
+        private void CalculateScore(GameObject die,bool isAdded)
         {
-            int totalScore = 0;
-
-            foreach (GameObject placeholder in _placeHolder)
-            {
-                if (placeholder.transform.childCount > 0)
-                {
-                    GameObject die = placeholder.transform.GetChild(0).gameObject;
-                    int faceValue = GetDiceFaceValue(die);
-                    totalScore += CalculateIndividualScore(faceValue);
-                }
-            }
-            _uiManager.UpdateScore(totalScore);
+            Debug.Log("Calculating...");
+            int faceValue = GetDiceFaceValue(die);
+            if(isAdded)
+                Score += CalculateIndividualScore(faceValue);
+            else
+                Score -= CalculateIndividualScore(faceValue);
+            _uiManager.UpdateScore(Score);
         }
         private int GetDiceFaceValue(GameObject die)
         {
@@ -107,7 +131,7 @@ namespace Zilch
                     // Check for 3 of a kind
                     if (CheckForNOfAKind(faceValue, 3))
                     {
-                        return faceValue * 100; // e.g., three 4s equal 400 points
+                        return faceValue * 100;
                     }
                     // Check for 3 ones
                     else if (faceValue == 1 && CheckForNOfAKind(faceValue, 3))
@@ -118,11 +142,6 @@ namespace Zilch
                     else if (faceValue == 1 && CheckForNOfAKind(faceValue, 4))
                     {
                         return 2000; // 4 ones = 2,000 points
-                    }
-                    // Check for 3 twos, 3 threes, 3 fours, 3 fives, 3 sixes
-                    else if (CheckForNOfAKind(faceValue, 3))
-                    {
-                        return faceValue * 100; // e.g., three 2s equal 200 points
                     }
                     // Check for a straight (five dice in consecutive number order)
                     else if (CheckForStraight())
@@ -143,12 +162,13 @@ namespace Zilch
         private bool CheckForNOfAKind(int faceValue, int n)
         {
             int count = 0;
-
-            foreach (GameObject placeholder in _placeHolder)
+            Transform placeholder = _placeHolder[_currentPlaceholderIndex].transform;
+            for (int i = 0; i < placeholder.childCount; i++)
             {
-                if (placeholder.transform.childCount > 0)
-                {
-                    GameObject die = placeholder.transform.GetChild(0).gameObject;
+                Transform child = placeholder.GetChild(i);
+                if (child.childCount > 0)
+                { 
+                    GameObject die = child.transform.GetChild(0).gameObject;
                     int dieFaceValue = GetDiceFaceValue(die);
                     if (dieFaceValue == faceValue)
                     {
@@ -164,11 +184,13 @@ namespace Zilch
         {
             List<int> uniqueFaceValues = new List<int>();
 
-            foreach (GameObject placeholder in _placeHolder)
+            Transform placeholder = _placeHolder[_currentPlaceholderIndex].transform;
+            for (int i = 0; i < placeholder.childCount; i++)
             {
-                if (placeholder.transform.childCount > 0)
+                Transform child = placeholder.GetChild(i);
+                if (child.childCount > 0)
                 {
-                    GameObject die = placeholder.transform.GetChild(0).gameObject;
+                    GameObject die = child.transform.GetChild(0).gameObject;
                     int dieFaceValue = GetDiceFaceValue(die);
 
                     if (!uniqueFaceValues.Contains(dieFaceValue))
@@ -195,11 +217,13 @@ namespace Zilch
             int pairCount = 0;
             List<int> uniqueFaceValues = new List<int>();
 
-            foreach (GameObject placeholder in _placeHolder)
+            Transform placeholder = _placeHolder[_currentPlaceholderIndex].transform;
+            for (int i = 0; i < placeholder.childCount; i++)
             {
-                if (placeholder.transform.childCount > 0)
+                Transform child = placeholder.GetChild(i);
+                if (child.childCount > 0)
                 {
-                    GameObject die = placeholder.transform.GetChild(0).gameObject;
+                    GameObject die = child.transform.GetChild(0).gameObject;
                     int dieFaceValue = GetDiceFaceValue(die);
 
                     if (!uniqueFaceValues.Contains(dieFaceValue))
@@ -216,9 +240,9 @@ namespace Zilch
 
             return pairCount == 3 && uniqueFaceValues.Count == 0;
         }
+        #endregion
         private void ShowZilchPopup()
         {
-            // Implement logic to show a popup indicating Zilch
             Debug.Log("Zilch!");
         }
     }

@@ -11,7 +11,9 @@ namespace Zilch
         [SerializeField]
         internal TMPro.TMP_Text[] _score;
         [SerializeField]
-        internal TMPro.TMP_Text PlayerScore;
+        internal TMPro.TMP_Text _currentScore;
+        [SerializeField]
+        internal TMPro.TMP_Text _totalScore;
         private GameManager _gameManager;
         private void Awake()
         {
@@ -38,7 +40,11 @@ namespace Zilch
         //}
         public void UpdateScore(int score)
         {
-            PlayerScore.text = "Player Score :"+ score.ToString();
+            _currentScore.text = "Current Score: "+ score.ToString();
+        }
+        public void UpdateTotalScore(int totalScore)
+        {
+            _totalScore.text = "Total Score:" + totalScore.ToString();
         }
     }
 }
