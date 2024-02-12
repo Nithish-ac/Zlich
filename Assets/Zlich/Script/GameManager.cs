@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,6 +38,7 @@ namespace Zilch
                 if(!dice._isSelected)
                     dice.RotateDice();
             }
+            Invoke(nameof(ShowZilchPopup), 4f);
         }
         public void CollectScore()
         {
@@ -243,7 +245,61 @@ namespace Zilch
         #endregion
         private void ShowZilchPopup()
         {
-            Debug.Log("Zilch!");
+            if (!CanPlaceDice())
+            {
+                Debug.Log("Zilch!");
+            }
+        }
+        private bool CanPlaceDice()
+        {
+            int[] faceCounts = new int[7];
+            foreach (var die in _dice)
+            {
+                if(!die._isSelected)
+                    faceCounts[die._diceFaceNow]++;
+            }
+            for (int i = 1; i < faceCounts.Length; i++)
+            {
+                Debug.Log("Face " + i + ": " + faceCounts[i]);
+            }
+            bool hasPossibility = true;
+
+            if (faceCounts[1] == 0 && faceCounts[5] == 0)
+            {
+                hasPossibility = false;
+            }
+
+            for (int i = 1; i <= 6; i++)
+            {
+                if (faceCounts[i] >= 3)
+                {
+                    hasPossibility = true;
+                    break;
+                }
+            }
+
+            for (int i = 1; i <= 6; i++)
+            {
+                if (faceCounts[i] >= 3 && i != 1 && i != 5) 
+                {
+                    hasPossibility = true;
+                    break;
+                }
+            }
+
+            // Check for a straight
+            if (faceCounts.Skip(1).Take(5).All(count => count >= 1))
+            {
+                hasPossibility = true;
+            }
+
+            // Check for three pairs
+            if (faceCounts.Count(count => count >= 2) >= 3)
+            {
+                hasPossibility = true;
+            }
+
+            return hasPossibility;
         }
     }
 }
