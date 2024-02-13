@@ -17,8 +17,13 @@ namespace Zilch
         internal List<GameObject> _placeHolder;
         private Dictionary<GameObject, Vector3> _previousPositions = new();
         private int _currentPlaceholderIndex = -1;
-        private int Score;
+        internal int _currentPlayerIndex = 0;
+        private int[] _scores;
         private int _totalScore;
+        [SerializeField]
+        private Button _rollBtn;
+        [SerializeField]
+        private Button _collectBtn;
         private void Awake()
         {
             if (Instance == null)
@@ -29,6 +34,19 @@ namespace Zilch
         private void Start()
         {
             _uiManager = UImanager.Instance;
+            _scores = new int[2];
+            _collectBtn.interactable = false;
+        }
+        private void Update()
+        {
+            if (_scores[_currentPlayerIndex] >= 300)
+            {
+                _collectBtn.interactable = true;
+            }
+            else
+            {
+                _collectBtn.interactable = true;
+            }
         }
         public void RollDice()
         {
@@ -38,15 +56,18 @@ namespace Zilch
                 if(!dice._isSelected)
                     dice.RotateDice();
             }
+            _rollBtn.interactable = false;
             Invoke(nameof(ShowZilchPopup), 4f);
         }
         public void CollectScore()
         {
-            _totalScore += Score;
-            Score = 0;
+            _totalScore += _scores[_currentPlayerIndex];
+            _scores[_currentPlayerIndex] = 0;
             _uiManager.UpdateTotalScore(_totalScore);
+            _uiManager.UpdateScore(0);
             ResetDice();
             _currentPlaceholderIndex = -1;
+            SwitchToNextPlayer();
         }
         public void ResetDice()
         {
@@ -61,6 +82,10 @@ namespace Zilch
                 MoveDieToPreviousPosition(key);
             }
             _previousPositions.Clear();
+        }
+        private void SwitchToNextPlayer()
+        {
+            _currentPlayerIndex = (_currentPlayerIndex + 1) % 2; // Cycle between players
         }
         #region ClickOnDie
         public void ClickOnDie(GameObject die)
@@ -109,13 +134,13 @@ namespace Zilch
         #region Calculate Score
         private void CalculateScore(GameObject die,bool isAdded)
         {
-            Debug.Log("Calculating...");
+            _rollBtn.interactable = true;
             int faceValue = GetDiceFaceValue(die);
             if(isAdded)
-                Score += CalculateIndividualScore(faceValue);
+                _scores[_currentPlayerIndex] += CalculateIndividualScore(faceValue);
             else
-                Score -= CalculateIndividualScore(faceValue);
-            _uiManager.UpdateScore(Score);
+                _scores[_currentPlayerIndex] -= CalculateIndividualScore(faceValue);
+            _uiManager.UpdateScore(_scores[_currentPlayerIndex]);
         }
         private int GetDiceFaceValue(GameObject die)
         {
@@ -126,24 +151,26 @@ namespace Zilch
             switch (faceValue)
             {
                 case 1:
+                    if (CheckForNOfAKind(faceValue, 3))
+                    {
+                        return 1000;
+                    }
+                    if(CheckForNOfAKind(faceValue, 4))
+                    {
+                        return 2000;
+                    }
                     return 100; // 1 = 100 points
                 case 5:
+                    if (CheckForNOfAKind(faceValue, 3))
+                    {
+                        return faceValue * 100;
+                    }
                     return 50;  // 5 = 50 points
                 default:
                     // Check for 3 of a kind
                     if (CheckForNOfAKind(faceValue, 3))
                     {
                         return faceValue * 100;
-                    }
-                    // Check for 3 ones
-                    else if (faceValue == 1 && CheckForNOfAKind(faceValue, 3))
-                    {
-                        return 1000; // 3 ones = 1,000 points
-                    }
-                    // Check for 4 ones
-                    else if (faceValue == 1 && CheckForNOfAKind(faceValue, 4))
-                    {
-                        return 2000; // 4 ones = 2,000 points
                     }
                     // Check for a straight (five dice in consecutive number order)
                     else if (CheckForStraight())
@@ -248,7 +275,13 @@ namespace Zilch
             if (!CanPlaceDice())
             {
                 Debug.Log("Zilch!");
+                _uiManager._popUp.SetActive(true);
+                Invoke("HideZilchPopup", 2f);
             }
+        }
+        private void HideZilchPopup()
+        {
+            _uiManager._popUp.SetActive(false);
         }
         private bool CanPlaceDice()
         {
