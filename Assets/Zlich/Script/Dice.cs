@@ -2,96 +2,122 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Dice : MonoBehaviour
+namespace Zilch
 {
-    Rigidbody body;
-    [SerializeField]
-    private float _maxRandomForceValue, _startRollingForce;
-    private float _forceX, _forceY, _forceZ;
-    internal int _diceFaceNow;
-    private bool _isRolling;
-    private void Awake()
+    public class Dice : MonoBehaviour
     {
-        Initialize();
-    }
-    private void Initialize()
-    {
-        body = GetComponent<Rigidbody>();
-        body.isKinematic = true;
-        transform.rotation = Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
-    }
-    private void Update()
-    {
-        if (body != null)
+        Rigidbody body;
+        [SerializeField]
+        private float _maxRandomForceValue, _startRollingForce;
+        private float _forceX, _forceY, _forceZ;
+        internal int _diceFaceNow;
+        private bool _isRolling;
+        internal bool _isSelected;
+        private Vector3 _spawnPosition;
+
+        //class
+        private GameManager _gameManager;
+        private void Awake()
         {
-            if (Input.GetMouseButtonDown(0))
+            Initialize();
+        }
+        private void Start()
+        {
+            _gameManager = GameManager.Instance;
+            _spawnPosition = transform.position;
+        }
+        private void Initialize()
+        {
+            body = GetComponent<Rigidbody>();
+            body.isKinematic = true;
+        }
+        private void Update()
+        {
+            if (body != null)
             {
-                RotateDice();
+                if (_isRolling && body.IsSleeping() == true)
+                {
+                    _isRolling = false;
+                    CheckRoll();
+                }
             }
-            if (_isRolling && body.IsSleeping() == true)
+        }
+        public void ResetDice()
+        {
+            transform.position = _spawnPosition;
+        }
+        private void OnMouseDown()
+        {
+            if (!_isRolling && _diceFaceNow>0)
             {
-                _isRolling = false;
-                CheckRoll();
+                _gameManager.ClickOnDie(gameObject);
             }
         }
-    }
-    public int GetDiceFaceScore(string tag)
-    {
-        if(gameObject.tag == tag && !_isRolling)
+        public int GetDiceFaceScore(string tag)
         {
-            return _diceFaceNow;
+            if (gameObject.tag == tag && !_isRolling)
+            {
+                return _diceFaceNow;
+            }
+            return 0;
         }
-        return 0;
-    }
-    private void RotateDice()
-    {
-        _isRolling = true;
-        body.isKinematic = false;
+        public void RotateDice()
+        {
+            transform.position = _spawnPosition;
+            transform.rotation = Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
+            _isRolling = true;
+            body.isKinematic = false;
 
-        _forceX = Random.Range(0f, _maxRandomForceValue);
-        _forceY = Random.Range(0f, _maxRandomForceValue);
-        _forceZ = Random.Range(0f, _maxRandomForceValue);
+            _forceX = Random.Range(0f, _maxRandomForceValue);
+            _forceY = Random.Range(0f, _maxRandomForceValue);
+            _forceZ = Random.Range(0f, _maxRandomForceValue);
 
-        body.AddForce(Vector3.back * _startRollingForce);
-        body.AddTorque(new Vector3(_forceX, _forceY, _forceZ));
-    }
-    public void CheckRoll()
-    {
-        float yDot, xDot, zDot;
-        int rollvalue = -1;
-        yDot = Mathf.Round(Vector3.Dot(transform.up.normalized, Vector3.up));
-        zDot = Mathf.Round(Vector3.Dot(transform.forward.normalized, Vector3.up));
-        xDot = Mathf.Round(Vector3.Dot(transform.right.normalized, Vector3.up));
+            body.AddForce(Vector3.up * _startRollingForce);
+            body.AddTorque(new Vector3(_forceX, _forceY, _forceZ));
+        }
+        public void CheckRoll()
+        {
+            //Actual Logic is
+            //y 1 == 2; y -1 == 5
+            //x 1 == 4; x -1 == 3
+            //z 1 == 1; z -1 == 6
 
-        switch (yDot)
-        {
-            case 1:
-                rollvalue = 2;
-                break;
-            case -1:
-                rollvalue = 5;
-                break;
+            float yDot, xDot, zDot;
+            int rollvalue = -1;
+            yDot = Mathf.Round(Vector3.Dot(transform.up.normalized, Vector3.up));
+            zDot = Mathf.Round(Vector3.Dot(transform.forward.normalized, Vector3.up));
+            xDot = Mathf.Round(Vector3.Dot(transform.right.normalized, Vector3.up));
+
+            switch (yDot)
+            {
+                case 1:
+                    rollvalue = 2;
+                    break;
+                case -1:
+                    rollvalue = 5;
+                    break;
+            }
+            switch (xDot)
+            {
+                case 1:
+                    rollvalue = 4;
+                    break;
+                case -1:
+                    rollvalue = 3;
+                    break;
+            }
+            switch (zDot)
+            {
+                case 1:
+                    rollvalue = 1;
+                    break;
+                case -1:
+                    rollvalue = 6;
+                    break;
+            }
+            _diceFaceNow = rollvalue;
+            //UImanager.Instance.UpdateScoreText(gameObject.tag);
+            Debug.Log("Score Updated = " + gameObject.tag + " = " + _diceFaceNow);
         }
-        switch (xDot)
-        {
-            case 1:
-                rollvalue = 4;
-                break;
-            case -1:
-                rollvalue = 3;
-                break;
-        }
-        switch (zDot)
-        {
-            case 1:
-                rollvalue = 1;
-                break;
-            case -1:
-                rollvalue = 6;
-                break;
-        }
-        _diceFaceNow = rollvalue;
-        Score.Instance.UpdateScoreText(gameObject.tag);
-        Debug.Log("Score Updated = " + gameObject.tag + " = "+_diceFaceNow);
     }
 }
