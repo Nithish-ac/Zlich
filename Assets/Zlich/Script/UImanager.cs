@@ -34,7 +34,7 @@ namespace Zilch
         }
         public void UpdateTotalScore(int totalScore)
         {
-            _totalScore[_gameManager._currentPlayerIndex].text = "Total Score:" + totalScore.ToString();
+            _totalScore[_gameManager._currentPlayerIndex].text = totalScore.ToString();
         }
     }
 }
