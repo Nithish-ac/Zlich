@@ -57,13 +57,14 @@ namespace Zilch
                     dice.RotateDice();
             }
             _rollBtn.interactable = false;
-            Invoke(nameof(ShowZilchPopup), 4f);
+            Invoke(nameof(ShowZilchPopup), 3f);
         }
         public void CollectScore()
         {
             _totalScore += _scores[_currentPlayerIndex];
             _scores[_currentPlayerIndex] = 0;
             _uiManager.UpdateTotalScore(_totalScore);
+
             _uiManager.UpdateScore(0);
             ResetDice();
             _currentPlaceholderIndex = -1;
@@ -85,7 +86,9 @@ namespace Zilch
         }
         private void SwitchToNextPlayer()
         {
-            _currentPlayerIndex = (_currentPlayerIndex + 1) % 2; // Cycle between players
+            _currentPlayerIndex = (_currentPlayerIndex + 1) % 2;
+
+            _rollBtn.interactable = true;// Cycle between players
         }
         #region ClickOnDie
         public void ClickOnDie(GameObject die)
@@ -276,6 +279,12 @@ namespace Zilch
             {
                 Debug.Log("Zilch!");
                 _uiManager._popUp.SetActive(true);
+                _scores[_currentPlayerIndex] = 0;
+                _uiManager.UpdateScore(0);
+                ResetDice();
+                _currentPlaceholderIndex = -1;
+                SwitchToNextPlayer();
+
                 Invoke("HideZilchPopup", 2f);
             }
         }
@@ -283,7 +292,7 @@ namespace Zilch
         {
             _uiManager._popUp.SetActive(false);
         }
-        private bool CanPlaceDice()
+        public bool CanPlaceDice()
         {
             int[] faceCounts = new int[7];
             foreach (var die in _dice)
